@@ -9,7 +9,7 @@ window.addEventListener('load', function() {
   var homeView = document.getElementById('home-view');
 
   // buttons and event listeners
-  var homeViewBtn = document.getElementById('btn-home-view');
+  var homeViewBtn = document.getElementById('homeBtn');
   var loginBtn = document.getElementById('qsLoginBtn');
   var logoutBtn = document.getElementById('qsLogoutBtn');
     
@@ -17,18 +17,40 @@ window.addEventListener('load', function() {
   'tzwQhlg0V3yzySAQe92rADhvpDees0oW',
   'revoltmoon.eu.auth0.com'
   );
+  
+  var config = {
+    apiKey: "AIzaSyD2Lp_QC8a4jWHsy6GOZdN0sWjXLLihXy8",
+    authDomain: "anilibria-1e924.firebaseapp.com",
+    databaseURL: "https://anilibria-1e924.firebaseio.com",
+    projectId: "anilibria-1e924",
+    storageBucket: "anilibria-1e924.appspot.com",
+    messagingSenderId: "793792578918"
+  };
+
+  firebase.initializeApp(config);
+
+  var database = firebase.database()
 
   homeViewBtn.addEventListener('click', function() {
-    homeView.style.display = 'inline-block';
-    loginView.style.display = 'none';
+    var ref = database.ref('cartoons/100');
+    ref.once("value")
+        .then(function(snapshot) {
+        var cartoon = snapshot.child("userID").val(); 
+        var cartoonIDs = snapshot.child("favCartoonsID").val();
+        var snap = snapshot.val()
+        homeView.innerHTML = snap["cartoonName"]+ "<br>" + snap["cartoonDescription"]
+    });
   });
 
   loginBtn.addEventListener('click', function(e) {
-    lock.show()
+    lock.show();
+    homeView.innerHTML = 'login';
   });
 
-  logoutBtn.addEventListener('click', logout);
-
+  logoutBtn.addEventListener('click', function(e) {
+    lock.logout()
+    homeView.innerHTML = 'logout';
+  });
 
 
   function isAuthenticated() {
@@ -53,7 +75,7 @@ window.addEventListener('load', function() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('id_token');
     localStorage.removeItem('expires_at');
-    displayButtons();
+    //displayButtons();
   }
 
   function setSession(authResult) {
@@ -64,7 +86,7 @@ window.addEventListener('load', function() {
     localStorage.setItem('access_token', authResult.accessToken);
     localStorage.setItem('id_token', authResult.idToken);
     localStorage.setItem('expires_at', expiresAt);
-    displayButtons()
+    //displayButtons()
   }
   
 // Listening for the authenticated event
@@ -75,9 +97,10 @@ window.addEventListener('load', function() {
         // Handle error
         return;
       }
+
       setSession(authResult)
       //document.getElementById('nick').textContent = profile.nickname;
-
+      homeView.innerHTML = profile.nickname;
       //localStorage.setItem('accessToken', authResult.accessToken);
       //localStorage.setItem('profile', JSON.stringify(profile));
     });
