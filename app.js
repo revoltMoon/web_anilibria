@@ -5,8 +5,7 @@ window.addEventListener('load', function() {
   loadingSpinner.style.display = 'none';
 
   var homeView = document.getElementById('homeView');
-  var animeColumn = document.getElementById('anime')
-
+  var anime = document.getElementById('anime');
   // buttons and event listeners
   var homeViewBtn = document.getElementById('homeBtn');
   var loginBtn = document.getElementById('loginBtn');
@@ -32,21 +31,26 @@ window.addEventListener('load', function() {
 
   var database = firebase.database();
 
+  receiveCartoons();
+
   homeViewBtn.addEventListener('click', function() {
+    // var clon = $(".anime").clone().addClass('sao').removeClass('anime');
+    // clon.appendTo(".homeView");
+      var clone = $(".anime").last();
+      clone.find(".anime-title").last().text("3232");
+      clone.clone().appendTo(".homeView");
+    // clon.clone().appendTo(".homeView");
 
     var ref = database.ref('cartoons');
 
     ref.once("value")
         .then(function(snapshot) {
-            console.log(snapshot.val());
             var obj = snapshot.val()
             for (var item in obj) {
               var cartoon = obj[item];
-              //homeView.innerHTML = cartoon["cartoonName"];
               var clone = $(".anime").last();
               clone.find(".anime-title").last().text(cartoon["cartoonName"]);
               clone.clone().appendTo(".homeView");
-              clone.appendTo(".homeView")
             }
     });
   //var clone = $(".anime").last();//.clone().addClass('sao').removeClass('anime')
@@ -79,6 +83,22 @@ window.addEventListener('load', function() {
     logoutBtn.style.display = 'none';
     loginBtn.style.display = 'block';
   });
+
+  function receiveCartoons() {
+
+    var ref = database.ref('cartoons');
+
+    ref.once("value")
+        .then(function(snapshot) {
+            var obj = snapshot.val()
+            for (var item in obj) {
+              var cartoon = obj[item];
+              var clone = $(".anime").last();
+              clone.find(".anime-title").last().text(cartoon["cartoonName"]);
+              clone.clone().appendTo(".homeView");
+            }
+    });
+  };
 
   function setSession(authResult) {
   var expiresAt = JSON.stringify(
