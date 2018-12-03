@@ -4,15 +4,16 @@ window.addEventListener('load', function() {
   content.style.display = 'block';
   loadingSpinner.style.display = 'none';
 
-  var loginStatus = document.querySelector('.container h4');
-  var loginView = document.getElementById('login-view');
-  var homeView = document.getElementById('home-view');
+  var homeView = document.getElementById('homeView');
+  var animeColumn = document.getElementById('anime')
 
   // buttons and event listeners
   var homeViewBtn = document.getElementById('homeBtn');
-  var loginBtn = document.getElementById('qsLoginBtn');
-  var logoutBtn = document.getElementById('qsLogoutBtn');
-    
+  var loginBtn = document.getElementById('loginBtn');
+  var logoutBtn = document.getElementById('logoutBtn');
+
+  logoutBtn.style.display = 'none';
+
   var lock = new Auth0Lock(
   'tzwQhlg0V3yzySAQe92rADhvpDees0oW',
   'revoltmoon.eu.auth0.com'
@@ -29,17 +30,42 @@ window.addEventListener('load', function() {
 
   firebase.initializeApp(config);
 
-  var database = firebase.database()
+  var database = firebase.database();
 
   homeViewBtn.addEventListener('click', function() {
-    var ref = database.ref('cartoons/100');
+
+    var ref = database.ref('cartoons');
+
     ref.once("value")
         .then(function(snapshot) {
-        var cartoon = snapshot.child("userID").val(); 
-        var cartoonIDs = snapshot.child("favCartoonsID").val();
-        var snap = snapshot.val()
-        homeView.innerHTML = snap["cartoonName"]+ "<br>" + snap["cartoonDescription"]
+            console.log(snapshot.val());
+            var obj = snapshot.val()
+            for (var item in obj) {
+              var cartoon = obj[item];
+              //homeView.innerHTML = cartoon["cartoonName"];
+              var clone = $(".anime").last();
+              clone.find(".anime-title").last().text(cartoon["cartoonName"]);
+              clone.clone().appendTo(".homeView");
+              clone.appendTo(".homeView")
+            }
     });
+  //var clone = $(".anime").last();//.clone().addClass('sao').removeClass('anime')
+  //clone.find(".anime-title").last().text("3232");
+ // clone.clone().appendTo(".homeView");
+  //clone.appendTo(".homeView")
+  // var text = $(".anime-title").clone()
+  // text.text('232')
+  // text.appendTo(".sao")//(".anime-name")
+  //clone.appendTo(".homeView")
+    //animeColumn.clone().insertAfter('');
+    // var ref = database.ref('cartoons/100');
+    // ref.once("value")
+    //     .then(function(snapshot) {
+    //     var cartoon = snapshot.child("userID").val(); 
+    //     var cartoonIDs = snapshot.child("favCartoonsID").val();
+    //     var snap = snapshot.val();
+    //     homeView.innerHTML = snap["cartoonName"]+ "<br>" + snap["cartoonDescription"];
+    // });
   });
 
   loginBtn.addEventListener('click', function(e) {
@@ -48,61 +74,33 @@ window.addEventListener('load', function() {
   });
 
   logoutBtn.addEventListener('click', function(e) {
-    lock.logout()
+    lock.logout();
     homeView.innerHTML = 'logout';
+    logoutBtn.style.display = 'none';
+    loginBtn.style.display = 'block';
   });
 
-
-  function isAuthenticated() {
-  // Check whether the current time is past the
-  // access token's expiry time
-  var expiresAt = JSON.parse(localStorage.getItem('expires_at'));
-  return new Date().getTime() < expiresAt;
-  }
-  
-  function displayButtons() {
-  if (isAuthenticated()) {
-  loginBtn.style.display = 'none';
-  logoutBtn.style.display = 'inline-block';
-  } else {
-    loginBtn.style.display = 'inline-block';
-    logoutBtn.style.display = 'none';
-    }
-  }
-
-  function logout() {
-    // Remove tokens and expiry time from localStorage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('id_token');
-    localStorage.removeItem('expires_at');
-    //displayButtons();
-  }
-
   function setSession(authResult) {
-    // Set the time that the access token will expire at
-    var expiresAt = JSON.stringify(
-      authResult.expiresIn * 1000 + new Date().getTime()
-    );
-    localStorage.setItem('access_token', authResult.accessToken);
-    localStorage.setItem('id_token', authResult.idToken);
-    localStorage.setItem('expires_at', expiresAt);
-    //displayButtons()
-  }
-  
-// Listening for the authenticated event
-  lock.on("authenticated", function(authResult) {
-    // Use the token in authResult to getUserInfo() and save it to localStorage
-    lock.getUserInfo(authResult.accessToken, function(error, profile) {
-      if (error) {
-        // Handle error
-        return;
-      }
+  var expiresAt = JSON.stringify(
+    authResult.expiresIn * 1000 + new Date().getTime()
+  );
+  localStorage.setItem('access_token', authResult.accessToken);
+  localStorage.setItem('id_token', authResult.idToken);
+  localStorage.setItem('expires_at', expiresAt);
+  };
 
-      setSession(authResult)
-      //document.getElementById('nick').textContent = profile.nickname;
-      homeView.innerHTML = profile.nickname;
-      //localStorage.setItem('accessToken', authResult.accessToken);
-      //localStorage.setItem('profile', JSON.stringify(profile));
+  // Listening for the authenticated event
+  lock.on("authenticated", function(authResult) {
+  // Use the token in authResult to getUserInfo() and save it to localStorage
+  lock.getUserInfo(authResult.accessToken, function(error, profile) {
+    if (error) {
+
+      return;
+    }
+    setSession(authResult);
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'block';
+    homeView.innerHTML = profile.nickname;
     });
   });
 });
