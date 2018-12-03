@@ -34,42 +34,7 @@ window.addEventListener('load', function() {
   receiveCartoons();
 
   homeViewBtn.addEventListener('click', function() {
-    // var clon = $(".anime").clone().addClass('sao').removeClass('anime');
-    // clon.appendTo(".homeView");
-      var clone = $(".anime").last();
-      clone.find(".anime-title").last().text("3232");
-      clone.clone().appendTo(".homeView");
-    // clon.clone().appendTo(".homeView");
 
-    var ref = database.ref('cartoons');
-
-    ref.once("value")
-        .then(function(snapshot) {
-            var obj = snapshot.val()
-            for (var item in obj) {
-              var cartoon = obj[item];
-              var clone = $(".anime").last();
-              clone.find(".anime-title").last().text(cartoon["cartoonName"]);
-              clone.clone().appendTo(".homeView");
-            }
-    });
-  //var clone = $(".anime").last();//.clone().addClass('sao').removeClass('anime')
-  //clone.find(".anime-title").last().text("3232");
- // clone.clone().appendTo(".homeView");
-  //clone.appendTo(".homeView")
-  // var text = $(".anime-title").clone()
-  // text.text('232')
-  // text.appendTo(".sao")//(".anime-name")
-  //clone.appendTo(".homeView")
-    //animeColumn.clone().insertAfter('');
-    // var ref = database.ref('cartoons/100');
-    // ref.once("value")
-    //     .then(function(snapshot) {
-    //     var cartoon = snapshot.child("userID").val(); 
-    //     var cartoonIDs = snapshot.child("favCartoonsID").val();
-    //     var snap = snapshot.val();
-    //     homeView.innerHTML = snap["cartoonName"]+ "<br>" + snap["cartoonDescription"];
-    // });
   });
 
   loginBtn.addEventListener('click', function(e) {
@@ -94,8 +59,11 @@ window.addEventListener('load', function() {
             for (var item in obj) {
               var cartoon = obj[item];
               var clone = $(".anime").last();
-              clone.find(".anime-title").last().text(cartoon["cartoonName"]);
               clone.clone().appendTo(".homeView");
+              clone.find(".anime-title").last().text(cartoon["cartoonName"]);
+              clone.find("img").last().attr({
+                'src' : cartoon["cartoonImgUrl"]
+              });
             }
     });
   };
