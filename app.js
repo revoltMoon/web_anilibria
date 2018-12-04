@@ -19,6 +19,19 @@ window.addEventListener('load', function() {
   'revoltmoon.eu.auth0.com'
   );
 
+   var config = {
+   apiKey: "AIzaSyD2Lp_QC8a4jWHsy6GOZdN0sWjXLLihXy8",
+   authDomain: "anilibria-1e924.firebaseapp.com",
+   databaseURL: "https://anilibria-1e924.firebaseio.com",
+   projectId: "anilibria-1e924",
+   storageBucket: "anilibria-1e924.appspot.com",
+   messagingSenderId: "793792578918"
+  };
+
+  firebase.initializeApp(config);
+
+  var database = firebase.database();
+
   if (localStorage.getItem('profileName') !== null) {
   	$("#profileBtn").html(localStorage.getItem('profileName'));
   	loginBtn.style.display = 'none';
@@ -27,16 +40,29 @@ window.addEventListener('load', function() {
 
   if (localStorage.getItem('animeIdToNextPage') !== null) {
   	var cartoonId = localStorage.getItem('animeIdToNextPage');
-  	console.log(cartoonId);
   	var cartoonData = JSON.parse(localStorage.getItem(cartoonId));
-  	console.log(cartoonData);
-  	console.log(cartoonData["cartoonName"]);
   	var cartoon = $('.animka').last();
   	cartoon.find(".anime-title").last().text(cartoonData["cartoonName"]);
     cartoon.find("img").last().attr({
         'src' : cartoonData["cartoonImgUrl"]
     });
     cartoon.find(".anime-description").last().text(cartoonData["cartoonDescription"]);
+
+    if (document.getElementById('favBtn')) {
+
+    	document.getElementById('favBtn').addEventListener('click', function() {
+
+  		// console.log(localStorage);
+  		// getUserCartoons(localStorage.getItem('profileName'));
+  		// var favCartoons = localStorage.getItem('favCartoonsID');
+  		// console.log(favCartoons);
+  		// console.log(JSON.parse(localStorage.getItem('favCartoonsID')));
+
+  		database.ref('users/' + localStorage.getItem('profileName')).set({
+  	    'favCartoonsID': Array(cartoonId)
+     });
+  	});
+    }
   }
 
   lock.on("authenticated", function(authResult) {
@@ -55,19 +81,6 @@ window.addEventListener('load', function() {
       localStorage.setItem('profileName', profile.nickname);
     });
   });
-  
-  var config = {
-    apiKey: "AIzaSyD2Lp_QC8a4jWHsy6GOZdN0sWjXLLihXy8",
-    authDomain: "anilibria-1e924.firebaseapp.com",
-    databaseURL: "https://anilibria-1e924.firebaseio.com",
-    projectId: "anilibria-1e924",
-    storageBucket: "anilibria-1e924.appspot.com",
-    messagingSenderId: "793792578918"
-  };
-
-  firebase.initializeApp(config);
-
-  var database = firebase.database();
 
   receiveCartoons();
 
@@ -94,6 +107,11 @@ window.addEventListener('load', function() {
   	localStorage.setItem('animeIdToNextPage', cartoonId);
   	window.location.replace("https://anilibria.now.sh/anime.html");
   });
+    $(document).on('click', '.anime-image', function() {
+  	var cartoonId = $(this).attr("id");
+  	localStorage.setItem('animeIdToNextPage', cartoonId);
+  	window.location.replace("https://anilibria.now.sh/anime.html");
+  });
 
   function receiveCartoons() {
     var ref = database.ref('cartoons');
@@ -111,6 +129,9 @@ window.addEventListener('load', function() {
               clone.find(".anime-title").last().attr({
                 'id' : cartoon["cartoonID"]
               });
+              clone.find(".anime-image").last().attr({
+                'id' : cartoon["cartoonID"]
+              });
               var a = {
               	'cartoonDescription':cartoon["cartoonDescription"], 
               	'cartoonID':cartoon['cartoonID'], 
@@ -119,7 +140,6 @@ window.addEventListener('load', function() {
               };
               var cartoonId = cartoon['cartoonID'];
               localStorage.setItem(JSON.stringify(cartoonId), JSON.stringify(a));
-              //console.log(localStorage.getItem(cartoonId));
             };
         });
   };
@@ -130,9 +150,11 @@ window.addEventListener('load', function() {
       	.then(function(snapshot) {
       		if (snapshot.child(userName).exists()) {
       			var obj = snapshot.val();
+      			console.log(obj);
+      			console.log(obj[userName]);
+      			console.log(obj[userName]['favCartoonsID']);
       			localStorage.setItem('favCartoonsID', obj[userName]['favCartoonsID']);
       		} else {
-      			favCartoons = [0];
       			database.ref('users/' + userName).set({
       				'favCartoonsID': [0]
       			});
