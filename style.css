@@ -6,6 +6,47 @@
   margin-top: 7px
 }
 
+.header-h1 {
+    position: relative;
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+    text-align: center;
+  }
+  
+.header-h1 h1 {
+    display: inline-block;
+    background: #fff;
+    margin-bottom: 0;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    padding: .5rem 1.5rem;
+    border: .125rem solid #0d65e6;
+    color: #0d65e6;
+}
+
+.header-h1 h1::after {
+    content: "";
+    position: absolute;
+    background: #0d65e6;
+    height: .125rem;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    transform: translateY(-50%);
+    z-index: -999;
+}
+
+.text-descr {
+    color: #0d65e6;
+    text-align: left;
+    padding: 1.5rem 1.5rem;
+}
+
+.left  {
+  float: left;
+  margin: 1.5rem;
+}
+
 #login-view {
   display: none;
 }

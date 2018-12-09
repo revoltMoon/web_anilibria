@@ -13,6 +13,10 @@ window.addEventListener('load', function() {
   var profileBtn = document.getElementById('profileBtn');
 
   logoutBtn.style.display = 'none';
+  profileBtn.style.display = 'none';
+  if (document.getElementById('favBtn')) {
+  	document.getElementById('favBtn').style.display = 'none'
+  }
 
   var lock = new Auth0Lock(
   'tzwQhlg0V3yzySAQe92rADhvpDees0oW',
@@ -36,47 +40,55 @@ window.addEventListener('load', function() {
   	$("#profileBtn").html(localStorage.getItem('profileName'));
   	loginBtn.style.display = 'none';
   	logoutBtn.style.display = 'block';
+  	profileBtn.style.display = 'block';
+  	setupFavButton();
   }
 
   if (localStorage.getItem('animeIdToNextPage') !== null) {
-    	var cartoonId = localStorage.getItem('animeIdToNextPage');
-
-      console.log(cartoonId);
-    	var cartoonData = JSON.parse(localStorage.getItem(cartoonId));
-    	var cartoon = $('.animka').last();
-      setCollectionView(cartoon, cartoonData);
-      cartoon.find(".anime-description").last().text(cartoonData["cartoonDescription"]);
+  	setupFavButton();
+    var cartoonId = localStorage.getItem('animeIdToNextPage');
+    console.log(cartoonId);
+    var cartoonData = JSON.parse(localStorage.getItem(cartoonId));
+    var cartoon = $('.animka').last();
+    setCollectionView(cartoon, cartoonData, '.animka');
+    cartoon.find(".anime-description").last().text(cartoonData["cartoonDescription"]);
   }
   
   if (localStorage.getItem('profilePage') !== null) {
-    localStorage.removeItem('profilePage');
-
-    var favCartoons = localStorage.getItem('favCartoonsID');
+    //localStorage.removeItem('profilePage');
+    var favCartoons = JSON.parse(localStorage.getItem('favCartoonsID'));
     console.log(favCartoons);
-
-    var ref = database.ref('cartoons/' + favCartoons);
-    ref.once("value")
-        .then(function(snapshot) {
-              var cartoon = snapshot.val();
-              var clone = $(".anime-in-profile").last();
-              clone.clone().appendTo('profileView');
-              setCollectionView(clone, cartoon);
-        });
+    for (item in favCartoons) {
+    	if (favCartoons[item] !== 0) {
+	    	var ref = database.ref('cartoons/' + favCartoons[item]);
+		    ref.once("value").then(function(snapshot) {
+			    		var cartoon = snapshot.val();
+					    console.log(cartoon);
+					    var clone = $(".anime-in-profile").last();
+					    clone.clone().appendTo('.profileView');
+					    setCollectionView(clone, cartoon);
+		    });
+    	}
+    }
   }
 
   if (document.getElementById('favBtn')) {
         document.getElementById('favBtn').addEventListener('click', function() {
-          // console.log(localStorage);
-          // getUserCartoons(localStorage.getItem('profileName'));
-          // var favCartoons = localStorage.getItem('favCartoonsID');
-          // console.log(favCartoons);
-          // console.log(JSON.parse(localStorage.getItem('favCartoonsID')));
-          var cartoonId = localStorage.getItem('animeIdToNextPage');
-          database.ref('users/' + localStorage.getItem('profileName')).set({
-            'favCartoonsID': Array(cartoonId)
+          var favCartoons = JSON.parse(localStorage.getItem('favCartoonsID'));
+          console.log(favCartoons);
+          var cartoonId = parseInt(localStorage.getItem('animeIdToNextPage'));
+          console.log(cartoonId);
+          if (favCartoons.indexOf(cartoonId) == -1) {
+          favCartoons.push(cartoonId);
+          console.log(favCartoons);
+          var profile = localStorage.getItem('profileName')
+          database.ref('users/' + profile).set({
+            'favCartoonsID': favCartoons
           });
+          getUserCartoons(profile);
+          }
         });
-}
+  }
 
   lock.on("authenticated", function(authResult) {
     lock.getUserInfo(authResult.accessToken, function(error, profile) {
@@ -87,6 +99,8 @@ window.addEventListener('load', function() {
       $("#profileBtn").html(profile.nickname);
       loginBtn.style.display = 'none';
   	  logoutBtn.style.display = 'block';
+  	  profileBtn.style.display = 'block';
+  	  setupFavButton();
       getUserCartoons(profile.nickname);
       localStorage.setItem('accessToken', authResult.accessToken);
       localStorage.setItem('profile', JSON.stringify(profile));
@@ -98,6 +112,7 @@ window.addEventListener('load', function() {
 
   homeBtn.addEventListener('click', function() {
   	localStorage.removeItem('animeIdToNextPage');
+  	localStorage.removeItem('profilePage');
   	window.location.replace("https://anilibria.now.sh");
   });
 
@@ -109,7 +124,9 @@ window.addEventListener('load', function() {
     localStorage.clear();
     lock.logout();
     logoutBtn.style.display = 'none';
+    profileBtn.style.display = 'none';
     loginBtn.style.display = 'block';
+    setupFavButton();
   });
 
   profileBtn.addEventListener('click', function() {
@@ -131,15 +148,13 @@ window.addEventListener('load', function() {
 
   function receiveCartoons() {
     var ref = database.ref('cartoons');
-    ref.once("value")
-        .then(function(snapshot) {
+    ref.once("value").then(function(snapshot) {
             var obj = snapshot.val();
             for (var item in obj) {
               var cartoon = obj[item];
               var clone = $('.anime').last();
               clone.clone().appendTo(".homeView");
               setCollectionView(clone, cartoon);
-
               var a = {
               	'cartoonDescription':cartoon["cartoonDescription"], 
               	'cartoonID':cartoon['cartoonID'], 
@@ -161,11 +176,13 @@ window.addEventListener('load', function() {
       			console.log(obj);
       			console.log(obj[userName]);
       			console.log(obj[userName]['favCartoonsID']);
-      			localStorage.setItem('favCartoonsID', obj[userName]['favCartoonsID']);
+      			localStorage.setItem('favCartoonsID', JSON.stringify(obj[userName]['favCartoonsID']));
+      			console.log(localStorage.getItem('favCartoonsID'));
       		} else {
       			database.ref('users/' + userName).set({
       				'favCartoonsID': [0]
       			});
+      			localStorage.setItem('favCartoonsID', JSON.stringify([0]));
       		}
       	});
   }
@@ -181,5 +198,15 @@ window.addEventListener('load', function() {
       cartoon.find(".anime-image").last().attr({
           'id' : cartoonData["cartoonID"]
       });
+  }
+
+  function setupFavButton() {
+  	if (document.getElementById('favBtn')) {
+  		if ($('#loginBtn').css('display') == 'none') {
+  			document.getElementById('favBtn').style.display = 'block'
+  		} else {
+  			document.getElementById('favBtn').style.display = 'none'
+  		}
+  	}
   }  
 });
