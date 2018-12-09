@@ -45,47 +45,47 @@ window.addEventListener('load', function() {
   }
 
   if (localStorage.getItem('animeIdToNextPage') !== null) {
+
   	setupFavButton();
     var cartoonId = localStorage.getItem('animeIdToNextPage');
-    console.log(cartoonId);
     var cartoonData = JSON.parse(localStorage.getItem(cartoonId));
     var cartoon = $('.animka').last();
     setCollectionView(cartoon, cartoonData, '.animka');
     cartoon.find(".anime-description").last().text(cartoonData["cartoonDescription"]);
-  }
-  
-  if (localStorage.getItem('profilePage') !== null) {
-    //localStorage.removeItem('profilePage');
-    var favCartoons = JSON.parse(localStorage.getItem('favCartoonsID'));
-    console.log(favCartoons);
-    for (item in favCartoons) {
-    	if (favCartoons[item] !== 0) {
-	    	var ref = database.ref('cartoons/' + favCartoons[item]);
-		    ref.once("value").then(function(snapshot) {
-			    		var cartoon = snapshot.val();
-					    console.log(cartoon);
-					    var clone = $(".anime-in-profile").last();
-					    clone.clone().appendTo('.profileView');
-					    setCollectionView(clone, cartoon);
-		    });
-    	}
-    }
+
+  } else if (localStorage.getItem('profilePage') !== null) {
+
+	    var favCartoons = JSON.parse(localStorage.getItem('favCartoonsID'));
+	    
+	    for (item in favCartoons) {
+	    	if (favCartoons[item] !== 0) {
+		    	var ref = database.ref('cartoons/' + favCartoons[item]);
+			    ref.once("value").then(function(snapshot) {
+				    		var cartoon = snapshot.val();
+						    console.log(cartoon);
+						    var clone = $(".anime-in-profile").last();
+						    clone.clone().appendTo('.profileView');
+						    setCollectionView(clone, cartoon);
+			    });
+	    	}
+	    }
+
+  } else {
+  	receiveCartoons();
   }
 
   if (document.getElementById('favBtn')) {
         document.getElementById('favBtn').addEventListener('click', function() {
           var favCartoons = JSON.parse(localStorage.getItem('favCartoonsID'));
-          console.log(favCartoons);
           var cartoonId = parseInt(localStorage.getItem('animeIdToNextPage'));
-          console.log(cartoonId);
           if (favCartoons.indexOf(cartoonId) == -1) {
-          favCartoons.push(cartoonId);
-          console.log(favCartoons);
-          var profile = localStorage.getItem('profileName')
-          database.ref('users/' + profile).set({
-            'favCartoonsID': favCartoons
-          });
-          getUserCartoons(profile);
+	          favCartoons.push(cartoonId);
+	          console.log(favCartoons);
+	          var profile = localStorage.getItem('profileName')
+	          database.ref('users/' + profile).set({
+	            'favCartoonsID': favCartoons
+	          });
+	          getUserCartoons(profile);
           }
         });
   }
@@ -107,8 +107,6 @@ window.addEventListener('load', function() {
       localStorage.setItem('profileName', profile.nickname);
     });
   });
-
-  receiveCartoons();
 
   homeBtn.addEventListener('click', function() {
   	localStorage.removeItem('animeIdToNextPage');
@@ -155,29 +153,24 @@ window.addEventListener('load', function() {
               var clone = $('.anime').last();
               clone.clone().appendTo(".homeView");
               setCollectionView(clone, cartoon);
-              var a = {
+              var cartoonElements = {
               	'cartoonDescription':cartoon["cartoonDescription"], 
               	'cartoonID':cartoon['cartoonID'], 
               	'cartoonImgUrl': cartoon['cartoonImgUrl'], 
               	'cartoonName': cartoon['cartoonName']
               };
               var cartoonId = cartoon['cartoonID'];
-              localStorage.setItem(JSON.stringify(cartoonId), JSON.stringify(a));
+              localStorage.setItem(JSON.stringify(cartoonId), JSON.stringify(cartoonElements));
             };
         });
   };
 
   function getUserCartoons(userName) {
   	var userRef = database.ref('users');
-      userRef.once("value")
-      	.then(function(snapshot) {
+      userRef.once("value").then(function(snapshot) {
       		if (snapshot.child(userName).exists()) {
       			var obj = snapshot.val();
-      			console.log(obj);
-      			console.log(obj[userName]);
-      			console.log(obj[userName]['favCartoonsID']);
       			localStorage.setItem('favCartoonsID', JSON.stringify(obj[userName]['favCartoonsID']));
-      			console.log(localStorage.getItem('favCartoonsID'));
       		} else {
       			database.ref('users/' + userName).set({
       				'favCartoonsID': [0]

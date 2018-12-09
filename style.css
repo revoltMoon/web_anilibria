@@ -42,6 +42,15 @@
     padding: 1.5rem 1.5rem;
 }
 
+.text-name {
+    color: #0d65e6;
+    text-align: center;
+}
+
+.cont-center {
+    text-align: center;
+}
+
 .left  {
   float: left;
   margin: 1.5rem;
