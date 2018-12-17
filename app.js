@@ -1,3 +1,86 @@
+function checkCartoonNotInDB(cartoonId) {
+  if (cartoonId == -1) {
+  	return true
+  } else {
+  	return false
+  }
+}
+
+function favCartoonIdNotZero(id) {
+  if (id !== 0) {
+		return true
+  } else {
+  	return false
+  }
+}
+
+  var db = window.database;
+  var config = {
+   apiKey: "AIzaSyD2Lp_QC8a4jWHsy6GOZdN0sWjXLLihXy8",
+   authDomain: "anilibria-1e924.firebaseapp.com",
+   databaseURL: "https://anilibria-1e924.firebaseio.com",
+   projectId: "anilibria-1e924",
+   storageBucket: "anilibria-1e924.appspot.com",
+   messagingSenderId: "793792578918"
+  };
+
+  firebase.initializeApp(config);
+
+  var database = firebase.database();
+  db = database;
+
+async function receiveCartoons() {
+  var ref = db.ref('cartoons');
+  return ref.once("value").then(function(snapshot) {
+	  		return snapshot.val();
+           	obj = snapshot.val();
+          	for (var item in obj) {
+            var cartoon = obj[item];
+            var clone = $('.anime').last();
+            clone.clone().appendTo(".homeView");
+            setCollectionView(clone, cartoon);
+            var cartoonElements = {
+              'cartoonDescription':cartoon["cartoonDescription"], 
+              'cartoonID':cartoon['cartoonID'], 
+              'cartoonImgUrl': cartoon['cartoonImgUrl'], 
+              'cartoonName': cartoon['cartoonName']
+            };
+            var cartoonId = cartoon['cartoonID'];
+            localStorage.setItem(JSON.stringify(cartoonId), JSON.stringify(cartoonElements));
+          }
+  });
+}
+
+async function getUserCartoons(userName) {
+  var userRef = db.ref('users');
+  return userRef.once("value").then(function(snapshot) {
+		        if (snapshot.child(userName).exists()) {
+		          var obj = snapshot.val();
+		          // localStorage.setItem('favCartoonsID', JSON.stringify(obj[userName]['favCartoonsID']));
+		          return obj[userName]['favCartoonsID'];
+		        } else {
+		          db.ref('users/' + userName).set({
+		            'favCartoonsID': [0]
+		          });
+		          // localStorage.setItem('favCartoonsID', JSON.stringify([0]));
+		          return [0];
+		        }
+		    });
+}
+
+function setCollectionView(cartoon, cartoonData) {
+  cartoon.find(".anime-title").last().text(cartoonData["cartoonName"]);
+  cartoon.find("img").last().attr({
+      'src' : cartoonData["cartoonImgUrl"]
+  });
+  cartoon.find(".anime-title").last().attr({
+      'id' : cartoonData["cartoonID"]
+  });
+  cartoon.find(".anime-image").last().attr({
+      'id' : cartoonData["cartoonID"]
+  });
+}
+
 window.addEventListener('load', function() {
   var content = document.querySelector('.content');
   var loadingSpinner = document.getElementById('loading');
@@ -23,7 +106,7 @@ window.addEventListener('load', function() {
   'revoltmoon.eu.auth0.com'
   );
 
-   var config = {
+  var config = {
    apiKey: "AIzaSyD2Lp_QC8a4jWHsy6GOZdN0sWjXLLihXy8",
    authDomain: "anilibria-1e924.firebaseapp.com",
    databaseURL: "https://anilibria-1e924.firebaseio.com",
@@ -35,6 +118,7 @@ window.addEventListener('load', function() {
   firebase.initializeApp(config);
 
   var database = firebase.database();
+  // db = database;
 
   if (localStorage.getItem('profileName') !== null) {
   	$("#profileBtn").html(localStorage.getItem('profileName'));
@@ -53,12 +137,14 @@ window.addEventListener('load', function() {
     setCollectionView(cartoon, cartoonData, '.animka');
     cartoon.find(".anime-description").last().text(cartoonData["cartoonDescription"]);
 
-  } else if (localStorage.getItem('profilePage') !== null) {
+  }
+
+  if (localStorage.getItem('profilePage') !== null) {
 
 	    var favCartoons = JSON.parse(localStorage.getItem('favCartoonsID'));
 	    
 	    for (item in favCartoons) {
-	    	if (favCartoons[item] !== 0) {
+	    	if (favCartoonIdNotZero(favCartoons[item])) {
 		    	var ref = database.ref('cartoons/' + favCartoons[item]);
 			    ref.once("value").then(function(snapshot) {
 				    		var cartoon = snapshot.val();
@@ -70,23 +156,26 @@ window.addEventListener('load', function() {
 	    	}
 	    }
 
-  } else {
-  	receiveCartoons();
   }
+
+  // if ((localStorage.getItem('animeIdToNextPage') == null) && (localStorage.getItem('profilePage') == null)) {
+    receiveCartoons();
+  // }
 
   if (document.getElementById('favBtn')) {
         document.getElementById('favBtn').addEventListener('click', function() {
           var favCartoons = JSON.parse(localStorage.getItem('favCartoonsID'));
           var cartoonId = parseInt(localStorage.getItem('animeIdToNextPage'));
-          if (favCartoons.indexOf(cartoonId) == -1) {
-	          favCartoons.push(cartoonId);
-	          console.log(favCartoons);
+
+          	if (checkCartoonNotInDB(favCartoons.indexOf(cartoonId))) {
+          	  favCartoons.push(cartoonId);
 	          var profile = localStorage.getItem('profileName')
 	          database.ref('users/' + profile).set({
 	            'favCartoonsID': favCartoons
 	          });
 	          getUserCartoons(profile);
-          }
+          	}
+
         });
   }
 
@@ -162,8 +251,8 @@ window.addEventListener('load', function() {
               var cartoonId = cartoon['cartoonID'];
               localStorage.setItem(JSON.stringify(cartoonId), JSON.stringify(cartoonElements));
             };
-        });
-  };
+    });
+  }
 
   function getUserCartoons(userName) {
   	var userRef = database.ref('users');
@@ -201,5 +290,5 @@ window.addEventListener('load', function() {
   			document.getElementById('favBtn').style.display = 'none'
   		}
   	}
-  }  
+  }
 });
